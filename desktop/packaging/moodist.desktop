@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Moodist
+GenericName=Ambient Sounds
+Comment=Ambient sounds for focus and calm
+Exec=moodist
+Icon=moodist
+Terminal=false
+Categories=Audio;AudioVideo;Utility;
+Keywords=ambient;noise;rain;focus;sleep;white noise;
+StartupWMClass=moodist

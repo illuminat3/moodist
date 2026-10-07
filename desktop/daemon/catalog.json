@@ -1,0 +1,447 @@
+[
+ {
+  "id": "river",
+  "label": "River",
+  "path": "nature/river.mp3"
+ },
+ {
+  "id": "waves",
+  "label": "Waves",
+  "path": "nature/waves.mp3"
+ },
+ {
+  "id": "campfire",
+  "label": "Campfire",
+  "path": "nature/campfire.mp3"
+ },
+ {
+  "id": "wind",
+  "label": "Wind",
+  "path": "nature/wind.mp3"
+ },
+ {
+  "id": "howling-wind",
+  "label": "Howling Wind",
+  "path": "nature/howling-wind.mp3"
+ },
+ {
+  "id": "wind-in-trees",
+  "label": "Wind in Trees",
+  "path": "nature/wind-in-trees.mp3"
+ },
+ {
+  "id": "waterfall",
+  "label": "Waterfall",
+  "path": "nature/waterfall.mp3"
+ },
+ {
+  "id": "walk-in-snow",
+  "label": "Walk in Snow",
+  "path": "nature/walk-in-snow.mp3"
+ },
+ {
+  "id": "walk-on-leaves",
+  "label": "Walk on Leaves",
+  "path": "nature/walk-on-leaves.mp3"
+ },
+ {
+  "id": "walk-on-gravel",
+  "label": "Walk on Gravel",
+  "path": "nature/walk-on-gravel.mp3"
+ },
+ {
+  "id": "droplets",
+  "label": "Droplets",
+  "path": "nature/droplets.mp3"
+ },
+ {
+  "id": "jungle",
+  "label": "Jungle",
+  "path": "nature/jungle.mp3"
+ },
+ {
+  "id": "light-rain",
+  "label": "Light Rain",
+  "path": "rain/light-rain.mp3"
+ },
+ {
+  "id": "heavy-rain",
+  "label": "Heavy Rain",
+  "path": "rain/heavy-rain.mp3"
+ },
+ {
+  "id": "thunder",
+  "label": "Thunder",
+  "path": "rain/thunder.mp3"
+ },
+ {
+  "id": "rain-on-window",
+  "label": "Rain on Window",
+  "path": "rain/rain-on-window.mp3"
+ },
+ {
+  "id": "rain-on-car-roof",
+  "label": "Rain on Car Roof",
+  "path": "rain/rain-on-car-roof.mp3"
+ },
+ {
+  "id": "rain-on-umbrella",
+  "label": "Rain on Umbrella",
+  "path": "rain/rain-on-umbrella.mp3"
+ },
+ {
+  "id": "rain-on-tent",
+  "label": "Rain on Tent",
+  "path": "rain/rain-on-tent.mp3"
+ },
+ {
+  "id": "rain-on-leaves",
+  "label": "Rain on Leaves",
+  "path": "rain/rain-on-leaves.mp3"
+ },
+ {
+  "id": "birds",
+  "label": "Birds",
+  "path": "animals/birds.mp3"
+ },
+ {
+  "id": "seagulls",
+  "label": "Seagulls",
+  "path": "animals/seagulls.mp3"
+ },
+ {
+  "id": "crickets",
+  "label": "Crickets",
+  "path": "animals/crickets.mp3"
+ },
+ {
+  "id": "wolf",
+  "label": "Wolf",
+  "path": "animals/wolf.mp3"
+ },
+ {
+  "id": "owl",
+  "label": "Owl",
+  "path": "animals/owl.mp3"
+ },
+ {
+  "id": "frog",
+  "label": "Frog",
+  "path": "animals/frog.mp3"
+ },
+ {
+  "id": "dog-barking",
+  "label": "Dog Barking",
+  "path": "animals/dog-barking.mp3"
+ },
+ {
+  "id": "horse-gallop",
+  "label": "Horse Gallop",
+  "path": "animals/horse-gallop.mp3"
+ },
+ {
+  "id": "cat-purring",
+  "label": "Cat Purring",
+  "path": "animals/cat-purring.mp3"
+ },
+ {
+  "id": "crows",
+  "label": "Crows",
+  "path": "animals/crows.mp3"
+ },
+ {
+  "id": "whale",
+  "label": "Whale",
+  "path": "animals/whale.mp3"
+ },
+ {
+  "id": "beehive",
+  "label": "Beehive",
+  "path": "animals/beehive.mp3"
+ },
+ {
+  "id": "woodpecker",
+  "label": "Woodpecker",
+  "path": "animals/woodpecker.mp3"
+ },
+ {
+  "id": "chickens",
+  "label": "Chickens",
+  "path": "animals/chickens.mp3"
+ },
+ {
+  "id": "cows",
+  "label": "Cows",
+  "path": "animals/cows.mp3"
+ },
+ {
+  "id": "sheep",
+  "label": "Sheep",
+  "path": "animals/sheep.mp3"
+ },
+ {
+  "id": "highway",
+  "label": "Highway",
+  "path": "urban/highway.mp3"
+ },
+ {
+  "id": "road",
+  "label": "Road",
+  "path": "urban/road.mp3"
+ },
+ {
+  "id": "ambulance-siren",
+  "label": "Ambulance Siren",
+  "path": "urban/ambulance-siren.mp3"
+ },
+ {
+  "id": "busy-street",
+  "label": "Busy Street",
+  "path": "urban/busy-street.mp3"
+ },
+ {
+  "id": "crowd",
+  "label": "Crowd",
+  "path": "urban/crowd.mp3"
+ },
+ {
+  "id": "traffic",
+  "label": "Traffic",
+  "path": "urban/traffic.mp3"
+ },
+ {
+  "id": "fireworks",
+  "label": "Fireworks",
+  "path": "urban/fireworks.mp3"
+ },
+ {
+  "id": "cafe",
+  "label": "Cafe",
+  "path": "places/cafe.mp3"
+ },
+ {
+  "id": "airport",
+  "label": "Airport",
+  "path": "places/airport.mp3"
+ },
+ {
+  "id": "church",
+  "label": "Church",
+  "path": "places/church.mp3"
+ },
+ {
+  "id": "temple",
+  "label": "Temple",
+  "path": "places/temple.mp3"
+ },
+ {
+  "id": "construction-site",
+  "label": "Construction Site",
+  "path": "places/construction-site.mp3"
+ },
+ {
+  "id": "underwater",
+  "label": "Underwater",
+  "path": "places/underwater.mp3"
+ },
+ {
+  "id": "crowded-bar",
+  "label": "Crowded Bar",
+  "path": "places/crowded-bar.mp3"
+ },
+ {
+  "id": "night-village",
+  "label": "Night Village",
+  "path": "places/night-village.mp3"
+ },
+ {
+  "id": "subway-station",
+  "label": "Subway Station",
+  "path": "places/subway-station.mp3"
+ },
+ {
+  "id": "office",
+  "label": "Office",
+  "path": "places/office.mp3"
+ },
+ {
+  "id": "supermarket",
+  "label": "Supermarket",
+  "path": "places/supermarket.mp3"
+ },
+ {
+  "id": "carousel",
+  "label": "Carousel",
+  "path": "places/carousel.mp3"
+ },
+ {
+  "id": "laboratory",
+  "label": "Laboratory",
+  "path": "places/laboratory.mp3"
+ },
+ {
+  "id": "laundry-room",
+  "label": "Laundry Room",
+  "path": "places/laundry-room.mp3"
+ },
+ {
+  "id": "restaurant",
+  "label": "Restaurant",
+  "path": "places/restaurant.mp3"
+ },
+ {
+  "id": "library",
+  "label": "Library",
+  "path": "places/library.mp3"
+ },
+ {
+  "id": "train",
+  "label": "Train",
+  "path": "transport/train.mp3"
+ },
+ {
+  "id": "inside-a-train",
+  "label": "Inside a Train",
+  "path": "transport/inside-a-train.mp3"
+ },
+ {
+  "id": "airplane",
+  "label": "Airplane",
+  "path": "transport/airplane.mp3"
+ },
+ {
+  "id": "submarine",
+  "label": "Submarine",
+  "path": "transport/submarine.mp3"
+ },
+ {
+  "id": "sailboat",
+  "label": "Sailboat",
+  "path": "transport/sailboat.mp3"
+ },
+ {
+  "id": "rowing-boat",
+  "label": "Rowing Boat",
+  "path": "transport/rowing-boat.mp3"
+ },
+ {
+  "id": "keyboard",
+  "label": "Keyboard",
+  "path": "things/keyboard.mp3"
+ },
+ {
+  "id": "typewriter",
+  "label": "Typewriter",
+  "path": "things/typewriter.mp3"
+ },
+ {
+  "id": "paper",
+  "label": "Paper",
+  "path": "things/paper.mp3"
+ },
+ {
+  "id": "clock",
+  "label": "Clock",
+  "path": "things/clock.mp3"
+ },
+ {
+  "id": "wind-chimes",
+  "label": "Wind Chimes",
+  "path": "things/wind-chimes.mp3"
+ },
+ {
+  "id": "singing-bowl",
+  "label": "Singing Bowl",
+  "path": "things/singing-bowl.mp3"
+ },
+ {
+  "id": "ceiling-fan",
+  "label": "Ceiling Fan",
+  "path": "things/ceiling-fan.mp3"
+ },
+ {
+  "id": "dryer",
+  "label": "Dryer",
+  "path": "things/dryer.mp3"
+ },
+ {
+  "id": "slide-projector",
+  "label": "Slide Projector",
+  "path": "things/slide-projector.mp3"
+ },
+ {
+  "id": "boiling-water",
+  "label": "Boiling Water",
+  "path": "things/boiling-water.mp3"
+ },
+ {
+  "id": "bubbles",
+  "label": "Bubbles",
+  "path": "things/bubbles.mp3"
+ },
+ {
+  "id": "tuning-radio",
+  "label": "Tuning Radio",
+  "path": "things/tuning-radio.mp3"
+ },
+ {
+  "id": "morse-code",
+  "label": "Morse Code",
+  "path": "things/morse-code.mp3"
+ },
+ {
+  "id": "washing-machine",
+  "label": "Washing Machine",
+  "path": "things/washing-machine.mp3"
+ },
+ {
+  "id": "vinyl-effect",
+  "label": "Vinyl Effect",
+  "path": "things/vinyl-effect.mp3"
+ },
+ {
+  "id": "windshield-wipers",
+  "label": "Windshield Wipers",
+  "path": "things/windshield-wipers.mp3"
+ },
+ {
+  "id": "white-noise",
+  "label": "White Noise",
+  "path": "noise/white-noise.wav"
+ },
+ {
+  "id": "pink-noise",
+  "label": "Pink Noise",
+  "path": "noise/pink-noise.wav"
+ },
+ {
+  "id": "brown-noise",
+  "label": "Brown Noise",
+  "path": "noise/brown-noise.wav"
+ },
+ {
+  "id": "binaural-delta",
+  "label": "Delta",
+  "path": "binaural/binaural-delta.wav"
+ },
+ {
+  "id": "binaural-theta",
+  "label": "Theta",
+  "path": "binaural/binaural-theta.wav"
+ },
+ {
+  "id": "binaural-alpha",
+  "label": "Alpha",
+  "path": "binaural/binaural-alpha.wav"
+ },
+ {
+  "id": "binaural-beta",
+  "label": "Beta",
+  "path": "binaural/binaural-beta.wav"
+ },
+ {
+  "id": "binaural-gamma",
+  "label": "Gamma",
+  "path": "binaural/binaural-gamma.wav"
+ }
+]

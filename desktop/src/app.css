@@ -1,0 +1,516 @@
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter-tight/latin-600.css';
+@import '@fontsource/inter-tight/latin-700.css';
+@import '@fontsource/fraunces/latin-400.css';
+@import '@fontsource/fraunces/latin-500.css';
+@import '@fontsource/fraunces/latin-600.css';
+
+/* Tokens copied from the web app (src/styles/variables). */
+:root {
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #09090b;
+
+  /* Foreground */
+  --color-foreground: var(--color-neutral-50);
+  --color-foreground-subtle: var(--color-neutral-400);
+  --color-foreground-subtler: var(--color-neutral-500);
+
+  /* Backgrounds and surfaces */
+  --color-background: var(--color-neutral-950);
+  --color-surface: var(--color-neutral-900);
+  --color-surface-hover: var(--color-neutral-800);
+  --color-surface-active: var(--color-neutral-700);
+  --color-selected-surface: var(--color-neutral-800);
+  --color-selected-border: var(--color-neutral-600);
+  --color-card-hover: var(--color-surface);
+
+  /* Borders and focus */
+  --color-border: var(--color-neutral-800);
+  --color-border-strong: var(--color-neutral-700);
+  --color-focus: var(--color-neutral-600);
+
+  /* Overlays and media */
+  --color-backdrop: rgb(9 9 11 / 65%);
+  --color-on-image: #fff;
+  --color-on-image-subtle: rgb(255 255 255 / 80%);
+  --color-image-overlay: rgb(9 9 11 / 52%);
+  --color-image-surface: rgb(9 9 11 / 32%);
+  --color-image-border: rgb(255 255 255 / 22%);
+  --shadow-floating: none;
+  --shadow-card: none;
+  --shadow-card-hover: none;
+
+  /* Inverted controls */
+  --color-inverted-background: var(--color-neutral-50);
+  --color-inverted-background-hover: var(--color-neutral-200);
+  --color-inverted-foreground: var(--color-neutral-950);
+}
+
+:root[data-theme='light'] {
+  --color-foreground: var(--color-neutral-950);
+  --color-foreground-subtle: var(--color-neutral-600);
+  --color-foreground-subtler: var(--color-neutral-500);
+
+  --color-background: var(--color-neutral-50);
+  --color-surface: #fff;
+  --color-surface-hover: var(--color-neutral-100);
+  --color-surface-active: var(--color-neutral-200);
+  --color-selected-surface: var(--color-neutral-200);
+  --color-selected-border: var(--color-neutral-500);
+  --color-card-hover: var(--color-surface);
+
+  --color-border: var(--color-neutral-200);
+  --color-border-strong: var(--color-neutral-300);
+  --color-focus: var(--color-neutral-500);
+
+  --color-inverted-background: var(--color-neutral-950);
+  --color-inverted-background-hover: var(--color-neutral-800);
+  --color-inverted-foreground: var(--color-neutral-50);
+
+  --color-backdrop: rgb(9 9 11 / 35%);
+  --shadow-floating: 0 12px 32px rgb(9 9 11 / 10%);
+  --shadow-card: 0 1px 2px rgb(9 9 11 / 5%);
+  --shadow-card-hover: 0 8px 20px rgb(9 9 11 / 8%);
+}
+:root {
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-heading: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+
+  /* Font Sizes */
+  --font-base-size: 1rem;
+  --font-pos-ratio: 1.2;
+  --font-neg-ratio: 1.125;
+  --font-3xlg: calc(var(--font-xxlg) * var(--font-pos-ratio));
+  --font-2xlg: calc(var(--font-xlg) * var(--font-pos-ratio));
+  --font-xlg: calc(var(--font-lg) * var(--font-pos-ratio));
+  --font-lg: calc(var(--font-md) * var(--font-pos-ratio));
+  --font-md: calc(var(--font-base) * var(--font-pos-ratio));
+  --font-base: var(--font-base-size);
+  --font-sm: calc(var(--font-base) / var(--font-neg-ratio));
+  --font-xsm: calc(var(--font-sm) / var(--font-neg-ratio));
+  --font-2xsm: calc(var(--font-xsm) / var(--font-neg-ratio));
+  --font-3xsm: calc(var(--font-xxsm) / var(--font-neg-ratio));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-base);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+#app {
+  height: 100%;
+}
+
+::selection {
+  color: var(--color-foreground);
+  background-color: var(--color-surface-active);
+}
+
+select option {
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+}
+
+svg {
+  display: block;
+}
+
+.icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+
+  & svg {
+    width: 1em;
+    height: 1em;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-surface-active);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---- Shared controls (match the web app's modal buttons and inputs) ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  font-family: var(--font-heading);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-foreground);
+  white-space: nowrap;
+  cursor: pointer;
+  background-color: var(--color-surface-hover);
+  border: none;
+  border-radius: 0;
+  outline: none;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 120ms ease;
+
+  &:hover {
+    background-color: var(--color-surface-active);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &.primary {
+    color: var(--color-inverted-foreground);
+    background-color: var(--color-inverted-background);
+
+    &:hover {
+      background-color: var(--color-inverted-background-hover);
+    }
+  }
+
+  &.ghost {
+    color: var(--color-foreground-subtle);
+    background-color: transparent;
+    border: 1px solid var(--color-border-strong);
+
+    &:hover,
+    &.on {
+      color: var(--color-foreground);
+      background-color: var(--color-surface-hover);
+    }
+
+    &.on {
+      border-color: var(--color-selected-border);
+    }
+  }
+
+  &.small {
+    height: 28px;
+    padding: 0 10px;
+    font-size: var(--font-xsm);
+  }
+}
+
+.icon-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  line-height: 0;
+  color: var(--color-foreground-subtle);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-foreground);
+    background-color: var(--color-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  &.on {
+    color: var(--color-foreground);
+    background-color: var(--color-surface-active);
+    border-color: var(--color-border-strong);
+  }
+
+  &.round {
+    width: 40px;
+    height: 40px;
+    color: var(--color-foreground);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 50%;
+
+    &:hover {
+      background-color: var(--color-surface-hover);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-size: var(--font-sm);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0;
+  outline: none;
+  user-select: text;
+
+  &::placeholder {
+    color: var(--color-foreground-subtler);
+  }
+
+  &:focus {
+    border-color: var(--color-focus);
+  }
+
+  &.num {
+    width: 72px;
+    text-align: center;
+  }
+}
+
+select.input {
+  appearance: none;
+  padding-right: 32px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-foreground-subtle) 50%),
+    linear-gradient(135deg, var(--color-foreground-subtle) 50%, transparent 50%);
+  background-repeat: no-repeat;
+  background-position:
+    calc(100% - 17px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 5px 5px;
+}
+
+/* Range input from the web app's sound card. */
+.range {
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  appearance: none;
+  cursor: pointer;
+  background: transparent;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.16;
+  }
+
+  &::-webkit-slider-runnable-track {
+    height: 3px;
+    background-color: var(--color-surface-active);
+    border-radius: 999px;
+  }
+
+  &::-webkit-slider-thumb {
+    width: 10px;
+    height: 10px;
+    margin-top: -3.5px;
+    appearance: none;
+    background-color: var(--color-inverted-background);
+    border: 1px solid var(--color-background);
+    border-radius: 50%;
+  }
+
+  &:not(:disabled):focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  appearance: none;
+  cursor: pointer;
+  background-color: var(--color-surface-active);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  transition: background-color 180ms ease;
+
+  &::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    content: '';
+    background-color: var(--color-foreground-subtle);
+    border-radius: 50%;
+    transition:
+      transform 180ms ease,
+      background-color 180ms ease;
+  }
+
+  &:checked {
+    background-color: var(--color-inverted-background);
+
+    &::after {
+      background-color: var(--color-inverted-foreground);
+      transform: translateX(16px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* Page scaffolding */
+.page {
+  max-width: 1080px;
+  padding: 28px 28px 40px;
+  margin: 0 auto;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  & h1 {
+    font-family: var(--font-display);
+    font-size: var(--font-xlg);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  & p {
+    margin-top: 6px;
+    font-size: var(--font-sm);
+    color: var(--color-foreground-subtle);
+  }
+}
+
+.section-title {
+  margin-bottom: 12px;
+  font-family: var(--font-heading);
+  font-size: var(--font-xsm);
+  font-weight: 600;
+  color: var(--color-foreground-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.panel {
+  padding: 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 56px 20px;
+  font-size: var(--font-sm);
+  color: var(--color-foreground-subtle);
+  text-align: center;
+  border: 1px dashed var(--color-border-strong);
+
+  & .icon-wrap {
+    font-size: 28px;
+    color: var(--color-foreground-subtler);
+  }
+}
+
+.stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0,
+    transparent 5px,
+    var(--color-border) 5px,
+    var(--color-border) 6px
+  );
+}
+
+kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 6px;
+  font-family: var(--font-body);
+  font-size: var(--font-2xsm);
+  color: var(--color-foreground-subtle);
+  text-align: center;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border-strong);
+}

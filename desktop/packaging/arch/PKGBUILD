@@ -1,0 +1,41 @@
+# Builds Moodist from this checkout:  cd desktop/packaging/arch && makepkg -si
+pkgname=moodist
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Ambient sounds for focus and calm (native desktop app)'
+arch=('x86_64')
+url='https://github.com/remvze/moodist'
+license=('MIT')
+depends=('webkit2gtk-4.1' 'gtk3' 'libpulse' 'dbus')
+makedepends=('cargo' 'npm')
+optdepends=('pipewire-pulse: audio output on PipeWire systems')
+options=('!lto' '!debug')
+
+_root="$startdir/../.."
+
+build() {
+  cd "$_root"
+  export CARGO_TARGET_DIR="$srcdir/target"
+  npm ci --no-audit --no-fund
+  npx tauri build --no-bundle -- --locked
+  cargo build --release --locked -p moodistd
+}
+
+package() {
+  cd "$_root"
+  install -Dm755 "$srcdir/target/release/moodist" "$pkgdir/usr/bin/moodist"
+  install -Dm755 "$srcdir/target/release/moodistd" "$pkgdir/usr/bin/moodistd"
+
+  install -d "$pkgdir/usr/share/moodist"
+  cp -r ../public/sounds "$pkgdir/usr/share/moodist/sounds"
+  rm -f "$pkgdir/usr/share/moodist/sounds/silence.wav"
+  find "$pkgdir/usr/share/moodist" -type d -exec chmod 755 {} + -o -type f -exec chmod 644 {} +
+
+  install -Dm644 packaging/moodist.desktop "$pkgdir/usr/share/applications/moodist.desktop"
+  install -Dm644 src-tauri/icons/32x32.png "$pkgdir/usr/share/icons/hicolor/32x32/apps/moodist.png"
+  install -Dm644 src-tauri/icons/64x64.png "$pkgdir/usr/share/icons/hicolor/64x64/apps/moodist.png"
+  install -Dm644 src-tauri/icons/128x128.png "$pkgdir/usr/share/icons/hicolor/128x128/apps/moodist.png"
+  install -Dm644 src-tauri/icons/128x128@2x.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/moodist.png"
+  install -Dm644 src-tauri/icons/icon.png "$pkgdir/usr/share/icons/hicolor/512x512/apps/moodist.png"
+  install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
