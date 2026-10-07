@@ -1,4 +1,5 @@
-//! Audio engine: a small software mixer feeding a PulseAudio (pipewire-pulse) stream.
+//! Audio engine: a small software mixer feeding the platform's sound server
+//! (PulseAudio/PipeWire on Linux, WASAPI elsewhere; see the `output` backends).
 //!
 //! All gain changes (volume, play/pause, add/remove, swell) go through one per-track
 //! ramp, so every transition is click-free without a separate fade timer. When nothing
@@ -13,12 +14,15 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use libpulse_binding as pulse;
-use libpulse_simple_binding::Simple;
-use pulse::sample::{Format, Spec};
-use pulse::stream::Direction;
 use rodio::source::UniformSourceIterator;
 use rodio::Decoder;
+
+#[cfg_attr(target_os = "linux", path = "output_pulse.rs")]
+#[cfg_attr(not(target_os = "linux"), path = "output_cpal.rs")]
+mod output;
+
+pub use output::list_devices;
+use output::{connect, Output};
 
 const RATE: u32 = 48_000;
 const CHANNELS: u16 = 2;
@@ -164,28 +168,13 @@ impl Engine {
     }
 }
 
-fn connect(device: Option<&str>) -> Option<Simple> {
-    let spec = Spec { format: Format::FLOAT32NE, rate: RATE, channels: CHANNELS as u8 };
-    let bytes = |ms: u64| spec.usec_to_bytes(pulse::time::MicroSeconds(ms * 1000)) as u32;
-    let attr = pulse::def::BufferAttr {
-        maxlength: u32::MAX,
-        tlength: bytes(BUFFER_MS),
-        prebuf: u32::MAX,
-        minreq: bytes(BUFFER_MS / 3),
-        fragsize: u32::MAX,
-    };
-    let open = |dev| Simple::new(None, "Moodist", Direction::Playback, dev, "Ambient sounds", &spec, None, Some(&attr)).ok();
-    // A saved device may have been unplugged; fall back to the system default.
-    open(device).or_else(|| device.and_then(|_| open(None)))
-}
-
 fn run(shared: Arc<Shared>) {
     let mut tracks: HashMap<String, Track> = HashMap::new();
     let mut oneshots: Vec<Track> = Vec::new();
     let mut seen = u64::MAX;
     let (mut playing, mut master) = (false, 1.0f32);
     let mut device: Option<String> = None;
-    let mut out: Option<Simple> = None;
+    let mut out: Option<Output> = None;
     let mut buf = vec![0f32; BLOCK_FRAMES * CHANNELS as usize];
     let block_secs = BLOCK_FRAMES as f32 / RATE as f32;
     let max_step = block_secs / RAMP_SECS;
@@ -249,7 +238,7 @@ fn run(shared: Arc<Shared>) {
         if silent {
             // Nothing audible: release the device and sleep until something changes.
             if let Some(s) = out.take() {
-                let _ = s.drain();
+                s.drain();
             }
             tracks.retain(|_, t| !t.removing);
             drop(shared.cv.wait_while(ctl, |c| c.version == seen && !c.quit).unwrap());
@@ -304,11 +293,7 @@ fn run(shared: Arc<Shared>) {
             *s = s.clamp(-1.0, 1.0);
         }
 
-        // SAFETY: f32 has no invalid bit patterns and the slice covers exactly `buf`.
-        let bytes = unsafe {
-            std::slice::from_raw_parts(buf.as_ptr() as *const u8, buf.len() * std::mem::size_of::<f32>())
-        };
-        if out.as_ref().is_some_and(|s| s.write(bytes).is_err()) {
+        if out.as_ref().is_some_and(|s| !s.write(&buf)) {
             out = None; // server went away; reconnect next block
         }
     }
@@ -318,50 +303,4 @@ fn run(shared: Arc<Shared>) {
 pub struct OutputDevice {
     pub name: String,
     pub description: String,
-}
-
-/// Lists PulseAudio/PipeWire sinks. Returns an empty list if no server is reachable.
-pub fn list_devices() -> Vec<OutputDevice> {
-    use pulse::callbacks::ListResult;
-    use pulse::context::{Context, FlagSet, State};
-    use pulse::mainloop::standard::{IterateResult, Mainloop};
-    use pulse::operation::State as OpState;
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    let Some(mut mainloop) = Mainloop::new() else { return vec![] };
-    let Some(mut context) = Context::new(&mainloop, "Moodist") else { return vec![] };
-    if context.connect(None, FlagSet::NOAUTOSPAWN, None).is_err() {
-        return vec![];
-    }
-    loop {
-        if let IterateResult::Quit(_) | IterateResult::Err(_) = mainloop.iterate(true) {
-            return vec![];
-        }
-        match context.get_state() {
-            State::Ready => break,
-            State::Failed | State::Terminated => return vec![],
-            _ => {}
-        }
-    }
-
-    let devices = Rc::new(RefCell::new(Vec::new()));
-    let sink = devices.clone();
-    let op = context.introspect().get_sink_info_list(move |res| {
-        if let ListResult::Item(info) = res {
-            if let Some(name) = &info.name {
-                sink.borrow_mut().push(OutputDevice {
-                    name: name.to_string(),
-                    description: info.description.as_deref().unwrap_or(name).to_string(),
-                });
-            }
-        }
-    });
-    while op.get_state() == OpState::Running {
-        if let IterateResult::Quit(_) | IterateResult::Err(_) = mainloop.iterate(true) {
-            break;
-        }
-    }
-    context.disconnect();
-    devices.take()
 }

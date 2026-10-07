@@ -1,7 +1,7 @@
 //! moodistd: the always-on half of Moodist.
 //!
 //! Owns playback, mixes, playlist, timers and the tray icon, and serves the UI over a
-//! Unix socket. It links no GUI toolkit, so running in the background costs only the
+//! local socket (see `ipc`). It links no GUI toolkit, so running in the background costs only the
 //! audio engine. The UI (`moodist`) is a separate process that exits when its window
 //! closes.
 //!
@@ -13,13 +13,20 @@
 //! Lifecycle: closing the window sends "detach" and the daemon keeps playing. If an
 //! attached UI vanishes without detaching (force-killed), the daemon exits too.
 
+// No console window on Windows; the daemon is started by the UI.
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 mod audio;
 mod core;
+mod ipc;
+
+#[cfg_attr(target_os = "linux", path = "tray_ksni.rs")]
+#[cfg_attr(windows, path = "tray_windows.rs")]
+#[cfg_attr(not(any(target_os = "linux", windows)), path = "tray_none.rs")]
+mod tray;
 
 use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
 use std::sync::{Condvar, Mutex, MutexGuard, OnceLock};
 use std::time::Duration;
 
@@ -27,14 +34,13 @@ use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
 
 use crate::core::{now_ms, Core};
+use crate::ipc::Stream;
 
 struct Daemon {
     core: Mutex<Core>,
     /// Wakes the scheduler when deadlines may have changed.
     wake: Condvar,
-    clients: Mutex<Vec<UnixStream>>,
-    tray: OnceLock<ksni::blocking::Handle<Tray>>,
-    socket: PathBuf,
+    clients: Mutex<Vec<Stream>>,
 }
 
 static DAEMON: OnceLock<Daemon> = OnceLock::new();
@@ -51,14 +57,7 @@ impl Daemon {
     /// Pushes state to every connected UI and the tray. Called with the core locked so
     /// clients never see updates out of order.
     fn broadcast(&self, core: &Core) {
-        let playing = core.playing;
-        if let Some(tray) = self.tray.get() {
-            tray.update(|t| {
-                if t.playing != playing {
-                    t.playing = playing;
-                }
-            });
-        }
+        tray::set_playing(core.playing);
         let mut clients = self.clients.lock().unwrap();
         if clients.is_empty() {
             return; // nobody watching; skip serialisation entirely
@@ -77,7 +76,7 @@ impl Daemon {
         for c in self.clients.lock().unwrap().iter_mut() {
             let _ = c.write_all(b"{\"event\":\"quit\"}\n");
         }
-        let _ = std::fs::remove_file(&self.socket);
+        ipc::cleanup();
         std::process::exit(0);
     }
 }
@@ -206,7 +205,7 @@ fn dispatch(core: &mut Core, method: &str, p: &Value) -> Result<(Value, bool), S
     }
 }
 
-fn handle_client(stream: UnixStream) {
+fn handle_client(stream: Stream) {
     let d = daemon();
     // A UI that stops reading must not be able to stall playback.
     let _ = stream.set_write_timeout(Some(Duration::from_secs(1)));
@@ -291,70 +290,25 @@ fn run_scheduler() {
 
 /// Launches the UI. If it's already open, its single-instance guard focuses it instead.
 fn open_ui() {
-    let sibling = std::env::current_exe().ok().and_then(|p| Some(p.parent()?.join("moodist")));
-    let program = sibling.filter(|p| p.is_file()).unwrap_or_else(|| PathBuf::from("moodist"));
-    if let Ok(mut child) = Command::new(program)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::inherit())
-        .spawn()
-    {
+    if let Ok(mut child) = ipc::detached(ipc::sibling("moodist")).spawn() {
         // Reap it when it exits so it doesn't linger as a zombie.
         std::thread::spawn(move || child.wait());
     }
 }
 
-struct Tray {
-    playing: bool,
-    icons: Vec<ksni::Icon>,
+/// Tray menu "Play"/"Pause".
+fn toggle_playing() {
+    let d = daemon();
+    let mut core = d.lock();
+    let playing = !core.playing;
+    core.set_playing(playing);
+    d.broadcast(&core);
+    drop(core);
+    d.wake.notify_all();
 }
 
-impl ksni::Tray for Tray {
-    fn id(&self) -> String {
-        "moodist".into()
-    }
-
-    fn title(&self) -> String {
-        "Moodist".into()
-    }
-
-    fn icon_name(&self) -> String {
-        "moodist".into()
-    }
-
-    fn icon_pixmap(&self) -> Vec<ksni::Icon> {
-        self.icons.clone()
-    }
-
-    fn activate(&mut self, _x: i32, _y: i32) {
-        open_ui();
-    }
-
-    fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
-        use ksni::menu::StandardItem;
-        vec![
-            StandardItem { label: "Open Moodist".into(), activate: Box::new(|_| open_ui()), ..Default::default() }.into(),
-            StandardItem {
-                label: if self.playing { "Pause" } else { "Play" }.into(),
-                activate: Box::new(|_| {
-                    let d = daemon();
-                    let mut core = d.lock();
-                    let playing = !core.playing;
-                    core.set_playing(playing);
-                    d.broadcast(&core);
-                    drop(core);
-                    d.wake.notify_all();
-                }),
-                ..Default::default()
-            }
-            .into(),
-            ksni::MenuItem::Separator,
-            StandardItem { label: "Quit".into(), activate: Box::new(|_| daemon().quit()), ..Default::default() }.into(),
-        ]
-    }
-}
-
-fn tray_icons() -> Vec<ksni::Icon> {
+/// Tray icon pixels as (width, height, RGBA8).
+fn tray_icons() -> Vec<(u32, u32, Vec<u8>)> {
     let pngs: [&[u8]; 2] = [include_bytes!("../../src-tauri/icons/32x32.png"), include_bytes!("../../src-tauri/icons/64x64.png")];
     pngs.iter()
         .filter_map(|bytes| {
@@ -366,13 +320,13 @@ fn tray_icons() -> Vec<ksni::Icon> {
             if info.color_type != png::ColorType::Rgba || info.bit_depth != png::BitDepth::Eight {
                 return None;
             }
-            // SNI wants ARGB32 in network byte order.
-            let data = buf[..info.buffer_size()].chunks_exact(4).flat_map(|p| [p[3], p[0], p[1], p[2]]).collect();
-            Some(ksni::Icon { width: info.width as i32, height: info.height as i32, data })
+            buf.truncate(info.buffer_size());
+            Some((info.width, info.height, buf))
         })
         .collect()
 }
 
+#[cfg(unix)]
 fn config_path() -> PathBuf {
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
@@ -382,18 +336,21 @@ fn config_path() -> PathBuf {
     base.join("moodist").join("state.json")
 }
 
-pub fn socket_path() -> PathBuf {
-    match std::env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from).filter(|p| p.is_absolute()) {
-        Some(dir) => dir.join("moodist.sock"),
-        None => std::env::temp_dir().join(format!("moodist-{}.sock", std::env::var("USER").unwrap_or_default())),
-    }
+#[cfg(windows)]
+fn config_path() -> PathBuf {
+    let base = std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
+    base.join("Moodist").join("state.json")
 }
 
 fn sounds_dir() -> PathBuf {
     let exe_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(PathBuf::from));
     let candidates = [
         std::env::var_os("MOODIST_SOUNDS").map(PathBuf::from),
+        // Windows installer: resources sit next to the executables.
+        exe_dir.as_ref().map(|d| d.join("sounds")),
         exe_dir.as_ref().map(|d| d.join("../share/moodist/sounds")),
+        // Tauri's Linux bundles (AppImage): `usr/lib/<product name>/`.
+        exe_dir.as_ref().map(|d| d.join("../lib/Moodist/sounds")),
         Some(PathBuf::from("/usr/share/moodist/sounds")),
         Some(PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../public/sounds"))),
     ];
@@ -406,6 +363,7 @@ fn sounds_dir() -> PathBuf {
 
 /// Blocks termination signals in every thread and handles them on one, so logout or
 /// `kill` saves state and closes the UI instead of dying mid-write.
+#[cfg(unix)]
 fn handle_signals() {
     // SAFETY: plain libc signal-mask calls on a zeroed sigset; run before other threads exist.
     unsafe {
@@ -426,52 +384,39 @@ fn handle_signals() {
     }
 }
 
+/// Windows has no catchable termination signals for a windowless process; state is
+/// saved shortly after every change instead.
+#[cfg(windows)]
+fn handle_signals() {}
+
 fn main() {
-    let socket = socket_path();
-    if UnixStream::connect(&socket).is_ok() {
+    if let Ok(mut s) = ipc::connect() {
         // Already running. `moodistd --open` doubles as "show the window".
         if std::env::args().any(|a| a == "--open") {
-            if let Ok(mut s) = UnixStream::connect(&socket) {
-                let _ = s.write_all(b"{\"id\":0,\"method\":\"open\"}\n");
-            }
+            let _ = s.write_all(b"{\"id\":0,\"method\":\"open\"}\n");
         }
         return;
     }
-    let _ = std::fs::remove_file(&socket); // stale socket from a crash
-    let listener = match UnixListener::bind(&socket) {
+    let listener = match ipc::bind() {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("moodistd: cannot bind {}: {e}", socket.display());
+            eprintln!("moodistd: cannot bind {}: {e}", ipc::describe());
             std::process::exit(1);
         }
     };
 
     handle_signals();
     let core = Core::new(config_path(), &sounds_dir());
-    let _ = DAEMON.set(Daemon {
-        core: Mutex::new(core),
-        wake: Condvar::new(),
-        clients: Mutex::new(Vec::new()),
-        tray: OnceLock::new(),
-        socket,
-    });
+    let _ = DAEMON.set(Daemon { core: Mutex::new(core), wake: Condvar::new(), clients: Mutex::new(Vec::new()) });
 
     std::thread::Builder::new().name("scheduler".into()).spawn(run_scheduler).expect("spawn scheduler");
-
-    // The tray is optional: without a StatusNotifier host the daemon still works.
-    use ksni::blocking::TrayMethods;
-    match (Tray { playing: false, icons: tray_icons() }).spawn() {
-        Ok(handle) => {
-            let _ = daemon().tray.set(handle);
-        }
-        Err(e) => eprintln!("moodistd: tray unavailable: {e}"),
-    }
+    tray::start();
 
     if std::env::args().any(|a| a == "--open") {
         open_ui();
     }
 
-    for stream in listener.incoming().flatten() {
+    for stream in ipc::incoming(&listener) {
         let _ = std::thread::Builder::new().name("client".into()).spawn(move || handle_client(stream));
     }
 }

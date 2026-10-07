@@ -1,24 +1,25 @@
 //! The Moodist window. A thin client for `moodistd`, which owns all state and audio;
 //! this process exists only while the window is open.
 
+#[allow(dead_code)]
+#[path = "../../daemon/src/ipc.rs"]
+mod ipc;
+
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
-use std::os::unix::process::CommandExt;
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc;
 use std::sync::Mutex;
 use std::time::Duration;
 
 use serde_json::{json, Value};
+use ipc::Stream;
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 type Reply = Result<Value, String>;
 
 struct Client {
-    writer: Mutex<UnixStream>,
+    writer: Mutex<Stream>,
     pending: Mutex<HashMap<u64, mpsc::Sender<Reply>>>,
     next_id: AtomicU64,
     run_in_background: AtomicBool,
@@ -40,31 +41,15 @@ impl Client {
     }
 }
 
-fn socket_path() -> PathBuf {
-    match std::env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from).filter(|p| p.is_absolute()) {
-        Some(dir) => dir.join("moodist.sock"),
-        None => std::env::temp_dir().join(format!("moodist-{}.sock", std::env::var("USER").unwrap_or_default())),
-    }
-}
-
 /// Connects to the daemon, starting it first if needed.
-fn connect() -> std::io::Result<UnixStream> {
-    let socket = socket_path();
-    if let Ok(s) = UnixStream::connect(&socket) {
+fn connect() -> std::io::Result<Stream> {
+    if let Ok(s) = ipc::connect() {
         return Ok(s);
     }
-    let sibling = std::env::current_exe().ok().and_then(|p| Some(p.parent()?.join("moodistd")));
-    let program = sibling.filter(|p| p.is_file()).unwrap_or_else(|| PathBuf::from("moodistd"));
-    Command::new(program)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        // Own process group: survives this window and the terminal it was started from.
-        .process_group(0)
-        .spawn()?;
+    daemon_command().spawn()?;
     let mut last = None;
     for _ in 0..100 {
-        match UnixStream::connect(&socket) {
+        match ipc::connect() {
             Ok(s) => return Ok(s),
             Err(e) => last = Some(e),
         }
@@ -73,7 +58,19 @@ fn connect() -> std::io::Result<UnixStream> {
     Err(last.unwrap())
 }
 
-fn spawn_reader(app: AppHandle, stream: UnixStream) {
+fn daemon_command() -> std::process::Command {
+    // An AppImage's files vanish when its mount goes away with this window, so the
+    // daemon runs as a second instance of the image (see `main`), with its own mount.
+    #[cfg(target_os = "linux")]
+    if let Some(image) = std::env::var_os("APPIMAGE") {
+        let mut cmd = ipc::detached(image);
+        cmd.arg("--daemon");
+        return cmd;
+    }
+    ipc::detached(ipc::sibling("moodistd"))
+}
+
+fn spawn_reader(app: AppHandle, stream: Stream) {
     std::thread::spawn(move || {
         let client = app.state::<Client>();
         for line in BufReader::new(stream).lines() {
