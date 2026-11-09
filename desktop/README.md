@@ -97,9 +97,13 @@ at least the glibc it was built against.
 ### Arch / CachyOS (native package)
 
 ```sh
-cd desktop/packaging/arch
-makepkg -si
+./desktop/install.sh
 ```
+
+This builds a pacman package from your checkout and installs it, with a launcher
+entry and icons. Run it again to update. If Moodist is running, the script quits it
+before installing and opens it again afterwards. To build the package by hand, run
+`makepkg -si` in `desktop/packaging/arch`.
 
 ### CI
 
