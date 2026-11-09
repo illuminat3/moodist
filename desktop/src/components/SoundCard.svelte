@@ -10,6 +10,10 @@
   const favorite = $derived(app.s!.favorites.includes(sound.id));
 
   const toggle = () => call('toggle_sound', { id: sound.id });
+
+  // A press that starts on the volume slider and is released elsewhere on the card
+  // fires `click` on the card itself. Only toggle when the press started off the slider.
+  let pressedOnRange = false;
 </script>
 
 <!-- Same structure and styling as the web app's sound card. -->
@@ -18,7 +22,14 @@
   aria-pressed={selected}
   class="sound"
   class:selected
-  onclick={toggle}
+  onpointerdown={e => (pressedOnRange = (e.target as Element).closest('input[type="range"]:not(:disabled)') !== null)}
+  onclick={() => {
+    if (pressedOnRange) {
+      pressedOnRange = false;
+      return;
+    }
+    toggle();
+  }}
   onkeydown={e => {
     if (e.target !== e.currentTarget) return;
     if (e.key === 'Enter' || e.key === ' ') {
