@@ -15,7 +15,7 @@ use std::thread;
 use std::time::Duration;
 
 use rodio::source::UniformSourceIterator;
-use rodio::Decoder;
+use rodio::{ChannelCount, Decoder, SampleRate, Source};
 
 #[cfg_attr(target_os = "linux", path = "output_pulse.rs")]
 #[cfg_attr(not(target_os = "linux"), path = "output_cpal.rs")]
@@ -36,7 +36,43 @@ const BUFFER_MS: u64 = 150;
 const SWELL_PERIOD_SECS: f64 = 10.0;
 const SWELL_MIN: f64 = 0.4;
 
-type Stream = UniformSourceIterator<Decoder<BufReader<File>>>;
+type Stream = UniformSourceIterator<SpanFix<Decoder<BufReader<File>>>>;
+
+/// Gapless decoding trims the encoder delay, which for low-rate MPEG-2/2.5 files
+/// (576-sample frames) swallows the whole first frame, so the decoder reports a
+/// first span of `Some(0)`. `UniformSourceIterator` takes that as end-of-stream and
+/// yields nothing. Report an empty span as unknown instead.
+struct SpanFix<S>(S);
+
+impl<S: Source> Iterator for SpanFix<S> {
+    type Item = S::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+
+impl<S: Source> Source for SpanFix<S> {
+    fn current_span_len(&self) -> Option<usize> {
+        self.0.current_span_len().filter(|&n| n > 0)
+    }
+
+    fn channels(&self) -> ChannelCount {
+        self.0.channels()
+    }
+
+    fn sample_rate(&self) -> SampleRate {
+        self.0.sample_rate()
+    }
+
+    fn total_duration(&self) -> Option<Duration> {
+        self.0.total_duration()
+    }
+}
 
 fn open(path: &Path) -> Option<Stream> {
     let file = File::open(path).ok()?;
@@ -49,7 +85,7 @@ fn open(path: &Path) -> Option<Stream> {
         .with_gapless(true)
         .build()
         .ok()?;
-    Some(UniformSourceIterator::new(decoder, CHANNELS, RATE))
+    Some(UniformSourceIterator::new(SpanFix(decoder), CHANNELS, RATE))
 }
 
 #[derive(Clone, Copy, PartialEq)]
