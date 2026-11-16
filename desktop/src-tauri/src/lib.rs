@@ -118,8 +118,13 @@ pub fn run() {
     let reader = stream.try_clone().expect("clone socket");
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(win) = app.get_webview_window("main") {
+                let shown = win.is_visible().unwrap_or(false) && !win.is_minimized().unwrap_or(false);
+                if shown && args.iter().any(|a| a == "--toggle") {
+                    let _ = win.hide();
+                    return;
+                }
                 let _ = win.unminimize();
                 let _ = win.show();
                 let _ = win.set_focus();

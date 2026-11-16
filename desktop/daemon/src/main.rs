@@ -290,7 +290,15 @@ fn run_scheduler() {
 
 /// Launches the UI. If it's already open, its single-instance guard focuses it instead.
 fn open_ui() {
-    if let Ok(mut child) = ipc::detached(ipc::sibling("moodist")).spawn() {
+    launch_ui(&[]);
+}
+
+fn toggle_ui() {
+    launch_ui(&["--toggle"]);
+}
+
+fn launch_ui(args: &[&str]) {
+    if let Ok(mut child) = ipc::detached(ipc::sibling("moodist")).args(args).spawn() {
         // Reap it when it exits so it doesn't linger as a zombie.
         std::thread::spawn(move || child.wait());
     }

@@ -5,7 +5,7 @@ use std::sync::OnceLock;
 
 use ksni::blocking::{Handle, TrayMethods};
 
-use crate::{daemon, open_ui, toggle_playing, tray_icons};
+use crate::{daemon, open_ui, toggle_playing, toggle_ui, tray_icons};
 
 static HANDLE: OnceLock<Handle<Tray>> = OnceLock::new();
 
@@ -32,7 +32,7 @@ impl ksni::Tray for Tray {
     }
 
     fn activate(&mut self, _x: i32, _y: i32) {
-        open_ui();
+        toggle_ui();
     }
 
     fn menu(&self) -> Vec<ksni::MenuItem<Self>> {

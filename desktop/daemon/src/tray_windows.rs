@@ -11,7 +11,7 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
     DispatchMessageW, GetMessageW, PostThreadMessageW, TranslateMessage, MSG, WM_APP,
 };
 
-use crate::{daemon, open_ui, toggle_playing, tray_icons};
+use crate::{daemon, open_ui, toggle_playing, toggle_ui, tray_icons};
 
 /// Thread id of the tray's message loop; 0 until it's running.
 static THREAD: AtomicU32 = AtomicU32::new(0);
@@ -61,7 +61,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     }));
     TrayIconEvent::set_event_handler(Some(|e: TrayIconEvent| {
         if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = e {
-            open_ui();
+            toggle_ui();
         }
     }));
 
